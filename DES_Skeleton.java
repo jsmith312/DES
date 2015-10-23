@@ -9,7 +9,11 @@ import gnu.getopt.Getopt;
 
 
 public class DES_Skeleton {
-
+    private int K_BITS = 64;
+    private BitSet K_BITSET;
+    private int K+_BITS = 56;
+    private int R = 56;
+    
 	public static void main(String[] args) {
 		
 		StringBuilder inputFile = new StringBuilder();
@@ -87,8 +91,12 @@ public class DES_Skeleton {
 
 
 	static void genDESkey(){
-		System.out.println("New key goes here");
-		return;
+        SecureRandom rnd = new SecureRandom();
+        BitSet bs = new BitSet(K_BITS);
+        for(int i = 0; i < K_BITS; i++) {
+            bs.set(i, rnd.nextBoolean());
+        }
+        K_BITSET = bs;
 	}
 
 
