@@ -11,7 +11,7 @@ import gnu.getopt.Getopt;
 
 
 public class DES_Skeleton {
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
     public static int K_BITS = 64;
     public static BitSet K_BITSET;
     public static BitSet[] C;
@@ -26,6 +26,8 @@ public class DES_Skeleton {
 		StringBuilder outputFile = new StringBuilder();
 		StringBuilder keyStr = new StringBuilder();
 		StringBuilder encrypt = new StringBuilder();
+		
+		genDESkey();
 		
 		pcl(args, inputFile, outputFile, keyStr, encrypt);
 		
@@ -98,10 +100,25 @@ public class DES_Skeleton {
 
     static void genDESkey(){
         SecureRandom rnd = new SecureRandom();
+        String hex = "", s = "", full = "";
         K_BITSET = new BitSet();
         for(int i = 0; i < K_BITS; i++) {
             K_BITSET.set(i, rnd.nextBoolean());
+            if(K_BITSET.get(i) == true){
+            	hex+="1";
+            }else{
+            	hex+="0";
+            }
+            
         }
+        int j = 0;
+        for(int i = 0; i < 16; i++){
+        	s = hex.substring(j, j+4);
+        	j+=4;
+        	full += Integer.toHexString(Integer.parseInt(s,2));
+        }
+        System.out.println(full);
+        
         if (DEBUG) {
             System.out.println("K: ");
             printAsBinary(K_BITSET, 0);
