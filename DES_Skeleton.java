@@ -4,16 +4,19 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.security.SecureRandom;
+import java.util.BitSet;
 
 import gnu.getopt.Getopt;
 
 
 public class DES_Skeleton {
-    private int K_BITS = 64;
-    private BitSet K_BITSET;
-    private int Kp_BITS = 56;
-    private BitSet Kp_BITSET;
-    private int R = 56;
+    public static int K_BITS = 64;
+    public static BitSet K_BITSET;
+    public static BitSet[] C;
+    public static BitSet[] D;
+    public static int Kp_BITS = 56;
+    public static BitSet Kp_BITSET;
     
 	public static void main(String[] args) {
 		
@@ -93,30 +96,29 @@ public class DES_Skeleton {
 
     static void genDESkey(){
         SecureRandom rnd = new SecureRandom();
-        K_BITSET = new BitSet(64);
+        K_BITSET = new BitSet();
         for(int i = 0; i < K_BITS; i++) {
             K_BITSET.set(i, rnd.nextBoolean());
         }
         System.out.println("K: ");
-        System.out.println(K_BITSET.length());
-        printAsBinary(K_BITSET);
+        printAsBinary(K_BITSET, 0);
     }
     
     static void permute56bits() {
-        Kp_BITSET = new BitSet(56);
-        for (int i = 0; i < SBoxes.PC1.length; i++) {
+        Kp_BITSET = new BitSet(Kp_BITS);
+        for (int i = 0; i < Kp_BITS; i++) {
             Kp_BITSET.set(i, K_BITSET.get(SBoxes.PC1[i]));
         }
         System.out.println("K+: ");
         System.out.println(Kp_BITSET.length());
-        printAsBinary(Kp_BITSET);
+        printAsBinary(Kp_BITSET, 56);
     }
     
     static void genKeys() {
+        C = new BitSet[17];
+        D = new BitSet[17];
         BitSet left = new BitSet(28);
         BitSet right = new BitSet(28);
-        int rightSide = 0;
-        
         // set left & right bits
         for (int i = 0; i < 28; i++) {
             left.set(i, Kp_BITSET.get(i));
@@ -125,18 +127,47 @@ public class DES_Skeleton {
         for (int k = 0; k < 28; k++) {
             right.set(k, Kp_BITSET.get(index+k));
         }
+
+        BitSet c = left;
+        C[0] = c;
+        BitSet d = right;
+        D[0] = d;
         
-        System.out.print("C-0: ");
-        printAsBinary(left);
-        System.out.println();
-        System.out.println(left.length());
-        System.out.print("D-0: \n");
-        System.out.println(right.length());
-        printAsBinary(right);
+        // rotate based on the rotation amount specified in SBoxes.rotations[]
+        for (int i = 0; i < 16; i++) {
+            c = shiftLeft(c,SBoxes.rotations[i]);
+            C[i+1] = c;
+            d = shiftLeft(d,SBoxes.rotations[i]);
+            D[i+1] = d;
+        }
+        
+        // leave for debugging/double-checking
+        for (int i = 0; i < C.length; i++) {
+            System.out.print("C-"+(i)+": ");
+            printAsBinary(C[i], 28);
+            System.out.print("D-"+(i)+": ");
+            printAsBinary(D[i], 28);
+        }
     }
     
-    static void printAsBinary(BitSet bs) {
-        for (int i = 0; i < bs.length(); i++) {
+    public static BitSet shiftLeft(BitSet left, int numShift) {
+        BitSet c = new BitSet(28);
+        c = left;
+        boolean o;
+        for (int i = 0; i < numShift; i++) {
+            o = c.get(0);
+            c = c.get(1, c.length());
+            c.set(27,o);
+            assert(o == c.get(c.length()));
+        }
+        return c;
+    }
+    
+    static void printAsBinary(BitSet bs, int size) {
+        if (size == 0) {
+            size = bs.size();
+        }
+        for (int i = 0; i < size; i++) {
             if (bs.get(i)) { // if true, 1
                 System.out.print(1);
             } else { // else is 0
@@ -145,7 +176,7 @@ public class DES_Skeleton {
         }
         System.out.println();
     }
-
+    
 	/**
 	 * This function Processes the Command Line Arguments.
 	 * -p for the port number you are using
