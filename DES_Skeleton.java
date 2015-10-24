@@ -11,15 +11,17 @@ import gnu.getopt.Getopt;
 
 
 public class DES_Skeleton {
+    public static boolean DEBUG = false;
     public static int K_BITS = 64;
     public static BitSet K_BITSET;
     public static BitSet[] C;
     public static BitSet[] D;
+    public static BitSet[] K;
     public static int Kp_BITS = 56;
     public static BitSet Kp_BITSET;
     
 	public static void main(String[] args) {
-		
+		K = new BitSet[16];
 		StringBuilder inputFile = new StringBuilder();
 		StringBuilder outputFile = new StringBuilder();
 		StringBuilder keyStr = new StringBuilder();
@@ -100,8 +102,11 @@ public class DES_Skeleton {
         for(int i = 0; i < K_BITS; i++) {
             K_BITSET.set(i, rnd.nextBoolean());
         }
-        System.out.println("K: ");
-        printAsBinary(K_BITSET, 0);
+        if (DEBUG) {
+            System.out.println("K: ");
+            printAsBinary(K_BITSET, 0);
+            System.out.println();
+        }
     }
     
     static void permute56bits() {
@@ -109,16 +114,18 @@ public class DES_Skeleton {
         for (int i = 0; i < Kp_BITS; i++) {
             Kp_BITSET.set(i, K_BITSET.get(SBoxes.PC1[i]));
         }
-        System.out.println("K+: ");
-        System.out.println(Kp_BITSET.length());
-        printAsBinary(Kp_BITSET, 56);
+        if (DEBUG) {
+            System.out.println("K+: ");
+            printAsBinary(Kp_BITSET, 0);
+            System.out.println();
+        }
     }
     
     static void genKeys() {
         C = new BitSet[17];
         D = new BitSet[17];
-        BitSet left = new BitSet(28);
-        BitSet right = new BitSet(28);
+        BitSet left = new BitSet();
+        BitSet right = new BitSet();
         // set left & right bits
         for (int i = 0; i < 28; i++) {
             left.set(i, Kp_BITSET.get(i));
@@ -127,13 +134,10 @@ public class DES_Skeleton {
         for (int k = 0; k < 28; k++) {
             right.set(k, Kp_BITSET.get(index+k));
         }
-
         BitSet c = left;
         C[0] = c;
         BitSet d = right;
         D[0] = d;
-        
-        // rotate based on the rotation amount specified in SBoxes.rotations[]
         for (int i = 0; i < 16; i++) {
             c = shiftLeft(c,SBoxes.rotations[i]);
             C[i+1] = c;
@@ -141,12 +145,54 @@ public class DES_Skeleton {
             D[i+1] = d;
         }
         
-        // leave for debugging/double-checking
-        for (int i = 0; i < C.length; i++) {
-            System.out.print("C-"+(i)+": ");
-            printAsBinary(C[i], 28);
-            System.out.print("D-"+(i)+": ");
-            printAsBinary(D[i], 28);
+        if (DEBUG) {
+            System.out.println();
+            for (int i = 0; i < 17; i++) {
+                System.out.print("C-"+(i)+": ");
+                printAsBinary(C[i], 28);
+                System.out.print("D-"+(i)+": ");
+                printAsBinary(D[i], 28);
+            }
+        }
+        KKeys();
+    }
+    
+    public static void KKeys() {
+        BitSet gen = new BitSet();
+        BitSet[] genArr = new BitSet[17];
+        
+        int fetchIndex = 0;
+        for (int j = 1; j < 17; j++) {
+            gen = C[j];
+            for(int i= 28; i < 56; i++) {
+                gen.set(i, D[j].get(fetchIndex));
+                fetchIndex++;
+            }
+            genArr[j-1] = gen;
+            fetchIndex = 0;
+        }
+        
+        if (DEBUG) {
+            System.out.println();
+            for (int i = 0; i < 16; i++) {
+                printAsBinary(genArr[i], 56);
+            }
+            System.out.println();
+        }
+        
+        for (int i = 0; i < 16; i++) {
+            BitSet gen2 = new BitSet();
+            for (int j = 0; j < 48; j++) {
+                gen2.set(j, genArr[i].get(SBoxes.PC2[j]));
+            }
+            K[i] = gen2;
+        }
+        
+        if (DEBUG) {
+            System.out.println();
+            for (BitSet entry : K) {
+                printAsBinary(entry, 48);
+            }
         }
     }
     
@@ -167,8 +213,9 @@ public class DES_Skeleton {
         if (size == 0) {
             size = bs.size();
         }
+        
         for (int i = 0; i < size; i++) {
-            if (bs.get(i)) { // if true, 1
+            if (bs.get(i)) { // if true, 1 
                 System.out.print(1);
             } else { // else is 0
                 System.out.print(0);
