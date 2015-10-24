@@ -11,7 +11,7 @@ import gnu.getopt.Getopt;
 
 
 public class DES_Skeleton {
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
     public static int K_BITS = 64;
     public static BitSet K_BITSET;
     public static BitSet[] C;
@@ -26,9 +26,7 @@ public class DES_Skeleton {
 		StringBuilder outputFile = new StringBuilder();
 		StringBuilder keyStr = new StringBuilder();
 		StringBuilder encrypt = new StringBuilder();
-		
-		genDESkey();
-		
+			
 		pcl(args, inputFile, outputFile, keyStr, encrypt);
 		
 		if(keyStr.toString() != "" && encrypt.toString().equals("e")){
@@ -99,31 +97,27 @@ public class DES_Skeleton {
 
 
     static void genDESkey(){
-        SecureRandom rnd = new SecureRandom();
-        String hex = "", s = "", full = "";
-        K_BITSET = new BitSet();
-        for(int i = 0; i < K_BITS; i++) {
-            K_BITSET.set(i, rnd.nextBoolean());
-            if(K_BITSET.get(i) == true){
-            	hex+="1";
-            }else{
-            	hex+="0";
-            }
-            
-        }
-        int j = 0;
-        for(int i = 0; i < 16; i++){
-        	s = hex.substring(j, j+4);
-        	j+=4;
-        	full += Integer.toHexString(Integer.parseInt(s,2));
-        }
-        System.out.println(full);
-        
-        if (DEBUG) {
-            System.out.println("K: ");
-            printAsBinary(K_BITSET, 0);
-            System.out.println();
-        }
+    	String hex;
+    	for(;;){
+    		SecureRandom rnd = new SecureRandom();
+    		K_BITSET = new BitSet();
+    		for(int i = 0; i < K_BITS; i++) {
+    			K_BITSET.set(i, rnd.nextBoolean());     
+    		}
+    		hex = hexConv(K_BITSET, K_BITS);
+    		permute56bits();
+    		genKeys();
+    		KKeys();
+    		if(keyCheck()){
+    			System.out.println(hex);
+    			break;
+    		}
+    		if (DEBUG) {
+    			System.out.println("K: ");
+    			printAsBinary(K_BITSET, 0);
+    			System.out.println();
+    		}
+    	}
     }
     
     static void permute56bits() {
@@ -213,6 +207,20 @@ public class DES_Skeleton {
         }
     }
     
+    public static boolean keyCheck(){
+    	
+    	for(int i = 0; i < 15; i++){
+    		for(int j = 0; j < 16; j++){
+    			BitSet temp = K[i].get(0, 64);
+    			temp.xor(K[j]);
+    			if(i != j && temp.isEmpty()){
+    				return false;
+    			}
+    		}
+    	}
+    	return true;
+    }
+    
     public static BitSet shiftLeft(BitSet left, int numShift) {
         BitSet c = new BitSet(28);
         c = left;
@@ -224,6 +232,24 @@ public class DES_Skeleton {
             assert(o == c.get(c.length()));
         }
         return c;
+    }
+    
+    public static String hexConv(BitSet set, int size){
+    	String hex = "", s = "", full = "";
+    	for(int i = 0; i < size; i++){
+    		if(set.get(i) == true){
+        		hex+="1";
+        	}else{
+        		hex+="0";
+        	}
+    	}
+    	int j = 0;
+        for(int i = 0; i < 16; i++){
+        	s = hex.substring(j, j+4);
+        	j+=4;
+        	full += Integer.toHexString(Integer.parseInt(s,2));
+        }
+        return full;
     }
     
     static void printAsBinary(BitSet bs, int size) {
