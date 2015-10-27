@@ -145,10 +145,15 @@ public class DES_Skeleton {
 		// convert line to bit string
 		for (int i = 0; i < line.length(); i++) {
 			str = Integer.toBinaryString(bytes[i]);
+			//System.out.println(str.length());
+			if(str.length() != 4){
 			if (str.length() > 4) {
 				diff = (8 - str.length());
 			}
 			bits += (array[diff] + str);
+			}else{
+				bits+="0000"+str;
+			}
 		}
 		//If last M in line has less than 64bits append 0's
 		int size = bits.length(), j = (64 - (size % 64)), k = 0;
