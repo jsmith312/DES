@@ -125,6 +125,8 @@ public class DES_Skeleton {
 	 * @param line
 	 */
 	private static String DES_encrypt(String line) {
+		boolean notFullBlock = false;
+		String bin = "";
         //printAsBinary(K_BITSET, 64);
 		permute56bits();
         //printAsBinary(Kp_BITSET, 56);
@@ -150,9 +152,30 @@ public class DES_Skeleton {
 		}
 		//If last M in line has less than 64bits append 0's
 		int size = bits.length(), j = (64 - (size % 64)), k = 0;
-		for(int i = 0; i < j; i++){
-			bits += "0";
+		//for(int i = 0; i < j; i++){
+		//	bits += "2";
+		//}
+		int used = (size % 64)/8;
+		System.out.println(used);
+		int unused = (8 - used);
+		  /*System.out.println("used: "+used);
+		  System.out.println("unused: "+unused);
+		  System.out.println("bits: "+bits);
+		  System.out.println("bitsLength: "+bits.length());*/
+		if(unused > 0 && used != 0){
+	  		for(int i = 0; i < 8*(unused - 1); i++){
+	  			bits += "0";
+	  		}
+	  		bin = ""+used;
+	  		bytes = bin.getBytes();
+	  		str = Integer.toBinaryString(bytes[0]);
+	  		if (str.length() > 4) {
+				diff = (8 - str.length());
+			}
+			bits += (array[diff] + str);
 		}
+			System.out.println("reg block: "+bits);
+			//System.out.println(bits.length());
         //System.out.println("Bit Length: "+size);
 		size = (bits.length()/64);
 		//encrypt each message-block of line
@@ -162,13 +185,40 @@ public class DES_Skeleton {
 			for(int n = 0; n < 64; n++){
 				if(bits.charAt(k) == '1'){
 					M.set(n, true);
-				}else{
+				}else if(bits.charAt(k) == '0'){
 					M.set(n, false);
 				}
 				k++;
 			}
             M.xor(IV);
             //encrypt message
+			result+= messageEncrypt(M)+"\n";
+		}
+
+		if(used == 0){
+			String bits2 = "";
+			M = new BitSet();
+			for(int n = 0; n < 56; n++){
+				bits2+="0";
+			}
+			//System.out.println(bits2);
+			bin = "8";
+	  		bytes = bin.getBytes();
+	  		str = Integer.toBinaryString(bytes[0]);
+	  		//System.out.println(str);
+	  		if (str.length() > 4) {
+				diff = (8 - str.length());
+			}
+			bits2 += (array[diff] + str);
+			System.out.println("end block: "+bits2);
+			//System.out.println(bits2.length());
+			for(int n = 0; n < 64; n++){
+				if(bits2.charAt(n) == '1'){
+					M.set(n, true);
+				}else if(bits2.charAt(n) == '0'){
+					M.set(n, false);
+				}
+			}
 			result+= messageEncrypt(M)+"\n";
 		}
 		return result;
