@@ -139,21 +139,19 @@ public class DES_Skeleton {
 		BitSet M;
 		byte[] bytes = line.getBytes();
 		// leading zeros
-		String[] array = { "", "0", "00", "000" };
+		String[] array = { "", "0", "00", "000","0000","00000","000000","0000000" };
 		String str = "", bits = "", result="";
 		int diff = 0;
 		// convert line to bit string
 		for (int i = 0; i < line.length(); i++) {
 			str = Integer.toBinaryString(bytes[i]);
 			//System.out.println(str.length());
-			if(str.length() != 4){
-			if (str.length() > 4) {
-				diff = (8 - str.length());
+			diff = (8 - str.length());
+			for(int j = 0; j < diff; j++){
+				bits+="0";
 			}
-			bits += (array[diff] + str);
-			}else{
-				bits+="0000"+str;
-			}
+			bits += str;
+
 		}
 		//If last M in line has less than 64bits append 0's
 		int size = bits.length(), j = (64 - (size % 64)), k = 0;
@@ -174,10 +172,11 @@ public class DES_Skeleton {
 	  		bin = ""+unused;
 	  		bytes = bin.getBytes();
 	  		str = Integer.toBinaryString(bytes[0]);
-	  		if (str.length() > 4) {
-				diff = (8 - str.length());
+	  		diff = (8 - str.length());
+			for(int n = 0; n < diff; n++){
+				bits+="0";
 			}
-			bits += (array[diff] + str);
+			bits += str;
 		}
 			System.out.println("reg block: "+bits);
 			//System.out.println(bits.length());
