@@ -166,7 +166,7 @@ public class DES_Skeleton {
 	  		for(int i = 0; i < 8*(unused - 1); i++){
 	  			bits += "0";
 	  		}
-	  		bin = ""+used;
+	  		bin = ""+unused;
 	  		bytes = bin.getBytes();
 	  		str = Integer.toBinaryString(bytes[0]);
 	  		if (str.length() > 4) {
