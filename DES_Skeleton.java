@@ -151,9 +151,9 @@ public class DES_Skeleton {
 		String[] array = { "", "0", "00", "000","0000","00000","000000","0000000" };
 		String str = "", bits = "", result="";
 		int diff = 0;
-        if (bytes.length == 0) {
-            return "\n";
-        }
+        //if (bytes.length == 0) {
+        //    return "\n";
+        //}
 		// convert line to bit string
 		for (int i = 0; i < line.length(); i++) {
 			str = Integer.toBinaryString(bytes[i]);
@@ -190,7 +190,7 @@ public class DES_Skeleton {
 			}
 			bits += str;
 		}
-        System.out.println(bits);
+        //System.out.println(bits);
         //System.out.println(bits.length());
         //System.out.println("Bit Length: "+size);
 		size = (bits.length()/64);
@@ -226,7 +226,7 @@ public class DES_Skeleton {
 				diff = (8 - str.length());
 			}
 			bits2 += (array[diff] + str);
-			System.out.println(bits2);
+			//System.out.println(bits2);
 			//System.out.println(bits2.length());
 			for(int n = 0; n < 64; n++){
 				if(bits2.charAt(n) == '1'){
@@ -235,6 +235,7 @@ public class DES_Skeleton {
 					M.set(n, false);
 				}
 			}
+            M.xor(IV);
 			result+= messageEncrypt(M)+"\n";
 		}
 		return result;
@@ -345,7 +346,7 @@ public class DES_Skeleton {
         }
         System.out.println(buff.length());
         String bin = binaryToASCII(buff.toString());
-        int unused = 0;
+        Integer unused = 0;
         String newString = "";
         try {
             unused = Integer.parseInt(bin);
@@ -354,12 +355,15 @@ public class DES_Skeleton {
             // do not have an integert value (full block)!
             // e.printStackTrace();
         } finally {
-            // FULL_BLOCK = false;
-            System.out.println(unused);
-            for (int i =0; i < (64-(unused*8)); i++) {
-                newString += str.charAt(i);
+            if (unused.equals(8)) {
+                System.out.println("is eight");
+            } else {
+                System.out.println(unused);
+                for (int i =0; i < (64-(unused*8)); i++) {
+                    newString += str.charAt(i);
+                }
+//            System.out.println(newString);
             }
-            System.out.println(newString);
         }
         return newString;
     }
