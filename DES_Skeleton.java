@@ -25,9 +25,11 @@ public class DES_Skeleton {
 	public static BitSet Kp_BITSET;
 	public static String hex;
     public static BitSet IV;
-
+    public static boolean FULL_BLOCK;
+    
 	public static void main(String[] args) {
 		K = new BitSet[16];
+        FULL_BLOCK = false;
 		StringBuilder inputFile = new StringBuilder();
 		StringBuilder outputFile = new StringBuilder();
 		StringBuilder keyStr = new StringBuilder();
@@ -57,7 +59,12 @@ public class DES_Skeleton {
             String IVStr = "";
 			for (String line : lines) {
 				encryptedText = DES_decrypt(IVStr, line);
-				writer.print(encryptedText);
+                if (!FULL_BLOCK) {
+                    writer.print(encryptedText+"\n");
+                } else {
+                    writer.print(encryptedText);
+                }
+                
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -93,7 +100,7 @@ public class DES_Skeleton {
             M = hexToBinary(line, 64);
             result += messageDecrypt(M);
         }
-        return result + "\n";
+        return result;
 	}
 
 	private static void encrypt(StringBuilder keyStr, StringBuilder inputFile,
@@ -323,6 +330,9 @@ public class DES_Skeleton {
         }
         String ret = BitSetToString(newSet, 64);
         String newString = removePadding(ret);
+        if (newString.length() < 64) {
+            FULL_BLOCK = false;
+        }
         String ret2 = binaryToASCII(newString);
         return ret2;
     }
@@ -340,9 +350,11 @@ public class DES_Skeleton {
         try {
             unused = Integer.parseInt(bin);
         } catch (Exception e) {
+            FULL_BLOCK = true;
             // do not have an integert value (full block)!
             // e.printStackTrace();
         } finally {
+            // FULL_BLOCK = false;
             System.out.println(unused);
             for (int i =0; i < (64-(unused*8)); i++) {
                 newString += str.charAt(i);
