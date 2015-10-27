@@ -62,7 +62,6 @@ public class DES_Skeleton {
 		} catch (IOException e) {
 			e.printStackTrace();
         } finally {
-            writer.print("\n");
             writer.flush();
             writer.close();
         }
@@ -86,12 +85,15 @@ public class DES_Skeleton {
         //prepare message
         BitSet M;
         String result="";
+        //if (line.length() == 0) {
+        //    return "\n";
+        //}
         //byte[] bytes = line.getBytes();
         for (int i = 0; i < line.length(); i+=64) {
             M = hexToBinary(line, 64);
             result += messageDecrypt(M);
         }
-        return result;
+        return result + "\n";
 	}
 
 	private static void encrypt(StringBuilder keyStr, StringBuilder inputFile,
@@ -142,16 +144,18 @@ public class DES_Skeleton {
 		String[] array = { "", "0", "00", "000","0000","00000","000000","0000000" };
 		String str = "", bits = "", result="";
 		int diff = 0;
+        if (bytes.length == 0) {
+            return "\n";
+        }
 		// convert line to bit string
 		for (int i = 0; i < line.length(); i++) {
 			str = Integer.toBinaryString(bytes[i]);
 			//System.out.println(str.length());
 			diff = (8 - str.length());
-			for(int j = 0; j < diff; j++){
+			for(int j = 0; j < diff; j++) {
 				bits+="0";
 			}
 			bits += str;
-
 		}
 		//If last M in line has less than 64bits append 0's
 		int size = bits.length(), j = (64 - (size % 64)), k = 0;
@@ -159,7 +163,8 @@ public class DES_Skeleton {
 		//	bits += "2";
 		//}
 		int used = (size % 64)/8;
-		System.out.println(used);
+		//System.out.println(used);
+        
 		int unused = (8 - used);
 		  /*System.out.println("used: "+used);
 		  System.out.println("unused: "+unused);
@@ -178,8 +183,8 @@ public class DES_Skeleton {
 			}
 			bits += str;
 		}
-			System.out.println("reg block: "+bits);
-			//System.out.println(bits.length());
+        System.out.println(bits);
+        //System.out.println(bits.length());
         //System.out.println("Bit Length: "+size);
 		size = (bits.length()/64);
 		//encrypt each message-block of line
@@ -187,7 +192,7 @@ public class DES_Skeleton {
 			M = new BitSet();
 			//set bits in new BitSet
 			for(int n = 0; n < 64; n++){
-				if(bits.charAt(k) == '1'){
+				if(bits.charAt(k) == '1') {
 					M.set(n, true);
 				}else if(bits.charAt(k) == '0'){
 					M.set(n, false);
@@ -199,7 +204,7 @@ public class DES_Skeleton {
 			result+= messageEncrypt(M)+"\n";
 		}
 
-		if(used == 0){
+		if(used == 0) {
 			String bits2 = "";
 			M = new BitSet();
 			for(int n = 0; n < 56; n++){
@@ -214,12 +219,12 @@ public class DES_Skeleton {
 				diff = (8 - str.length());
 			}
 			bits2 += (array[diff] + str);
-			System.out.println("end block: "+bits2);
+			System.out.println(bits2);
 			//System.out.println(bits2.length());
 			for(int n = 0; n < 64; n++){
 				if(bits2.charAt(n) == '1'){
 					M.set(n, true);
-				}else if(bits2.charAt(n) == '0'){
+				}else if(bits2.charAt(n) == '0') {
 					M.set(n, false);
 				}
 			}
@@ -316,12 +321,39 @@ public class DES_Skeleton {
         for(int i = 0; i< K_BITS; i++) {
             IV.set(i, M.get(i));
         }
-        String ret = BitSetToString(newSet, 0);
-        String ret2 = binaryToASCII(ret);
+        String ret = BitSetToString(newSet, 64);
+        String newString = removePadding(ret);
+        String ret2 = binaryToASCII(newString);
         return ret2;
     }
     
+    public static String removePadding(String str) {
+        StringBuffer buff = new StringBuffer();
+        // get the last value to remove number of bytes
+        for (int i = 56; i < 64; i++) {
+            buff.append(str.charAt(i));
+        }
+        System.out.println(buff.length());
+        String bin = binaryToASCII(buff.toString());
+        int unused = 0;
+        String newString = "";
+        try {
+            unused = Integer.parseInt(bin);
+        } catch (Exception e) {
+            // do not have an integert value (full block)!
+            // e.printStackTrace();
+        } finally {
+            System.out.println(unused);
+            for (int i =0; i < (64-(unused*8)); i++) {
+                newString += str.charAt(i);
+            }
+            System.out.println(newString);
+        }
+        return newString;
+    }
+    
 	/**
+     *
 	 * IP():
 	 * 
 	 */
