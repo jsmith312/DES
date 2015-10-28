@@ -1,3 +1,9 @@
+/**
+ * @authors Jordan Smith, Chris Pawlik
+ * CSc 466
+ * Assignment 5
+ * 
+ */
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
@@ -24,12 +30,12 @@ public class DES_Skeleton {
 	public static int Kp_BITS = 56;
 	public static BitSet Kp_BITSET;
 	public static String hex;
-    public static BitSet IV;
-    public static boolean FULL_BLOCK;
-    
+	public static BitSet IV;
+	public static boolean FULL_BLOCK;
+
 	public static void main(String[] args) {
 		K = new BitSet[16];
-        FULL_BLOCK = false;
+		FULL_BLOCK = false;
 		StringBuilder inputFile = new StringBuilder();
 		StringBuilder outputFile = new StringBuilder();
 		StringBuilder keyStr = new StringBuilder();
@@ -41,77 +47,78 @@ public class DES_Skeleton {
 			K_BITSET = hexToBinary(keyStr.toString(), 64);
 			encrypt(keyStr, inputFile, outputFile);
 		} else if (keyStr.toString() != "" && encrypt.toString().equals("d")) {
-            K_BITSET = hexToBinary(keyStr.toString(), 64);
+			K_BITSET = hexToBinary(keyStr.toString(), 64);
 			decrypt(keyStr, inputFile, outputFile);
 		}
 	}
 
 	private static void decrypt(StringBuilder keyStr, StringBuilder inputFile,
 			StringBuilder outputFile) {
-        PrintWriter writer = null;
+		PrintWriter writer = null;
 		try {
 			writer = new PrintWriter(outputFile.toString(), "UTF-8");
 			List<String> lines = Files.readAllLines(
 					Paths.get(inputFile.toString()), Charset.defaultCharset());
-            IV = hexToBinary(lines.get(0), 64);
+			IV = hexToBinary(lines.get(0), 64);
 			lines.remove(0);
 			String encryptedText;
-            String IVStr = "";
+			String IVStr = "";
 			for (String line : lines) {
 				encryptedText = DES_decrypt(IVStr, line);
-                if (!FULL_BLOCK) {
-                    writer.print(encryptedText+"\n");
-                } else {
-                    writer.print(encryptedText);
-                }
-                
+				if (!FULL_BLOCK) {
+					writer.print(encryptedText + "\n");
+				} else {
+					writer.print(encryptedText);
+				}
+
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-        } finally {
-            writer.flush();
-            writer.close();
-        }
+		} finally {
+			writer.flush();
+			writer.close();
+		}
 
 	}
 
 	/**
-	 * TODO: You need to write the DES decryption here.
+	 * DES_decrypt():
 	 * 
 	 * @param line
 	 */
 	private static String DES_decrypt(String iVStr, String line) {
-        //printAsBinary(K_BITSET, 64);
-        permute56bits();
-        //printAsBinary(Kp_BITSET, 56);
-        genKeys();
-        KKeys();
-        //for(int i = 0; i < 16; i++) {
-        //printAsBinary(K[i], 48);
-        //}
-        //prepare message
-        BitSet M;
-        String result="";
-        //if (line.length() == 0) {
-        //    return "\n";
-        //}
-        //byte[] bytes = line.getBytes();
-        for (int i = 0; i < line.length(); i+=64) {
-            M = hexToBinary(line, 64);
-            result += messageDecrypt(M);
-        }
-        return result;
+		permute56bits();
+		genKeys();
+		KKeys();
+
+		// prepare message
+		BitSet M;
+		String result = "";
+
+		for (int i = 0; i < line.length(); i += 64) {
+			M = hexToBinary(line, 64);
+			result += messageDecrypt(M);
+		}
+		return result;
 	}
 
+	/**
+	 * encrypt():
+	 * 
+	 * @param keyStr
+	 *            , inputFile, outputFile
+	 * 
+	 * 
+	 */
 	private static void encrypt(StringBuilder keyStr, StringBuilder inputFile,
 			StringBuilder outputFile) {
-        PrintWriter writer = null;
+		PrintWriter writer = null;
 		try {
 			writer = new PrintWriter(outputFile.toString(), "UTF-8");
 
 			String encryptedText;
-            genIV();
-            writer.print(hexConv(IV, K_BITS)+"\n");
+			genIV();
+			writer.print(hexConv(IV, K_BITS) + "\n");
 			for (String line : Files.readAllLines(
 					Paths.get(inputFile.toString()), Charset.defaultCharset())) {
 				encryptedText = DES_encrypt(line);
@@ -119,370 +126,376 @@ public class DES_Skeleton {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-        } finally {
-            if (writer != null) {
-                    writer.flush();
-                    writer.close();
-            }
-            
-        }
-    }
+		} finally {
+			if (writer != null) {
+				writer.flush();
+				writer.close();
+			}
+
+		}
+	}
 
 	/**
-	 * TODO: You need to write the DES encryption here.
+	 * DES_encrypt():
 	 * 
 	 * @param line
+	 * 
+	 *            Takes in a full line of cleartext and converts to encrypted
+	 *            hex. Calls permute56bits(), genKeys() and KKeys() to generate
+	 *            subkeys from input key.
 	 */
 	private static String DES_encrypt(String line) {
 		boolean notFullBlock = false;
 		String bin = "";
-        //printAsBinary(K_BITSET, 64);
 		permute56bits();
-        //printAsBinary(Kp_BITSET, 56);
+
 		genKeys();
 		KKeys();
-        //for(int i = 0; i < 16; i++){
-        //printAsBinary(K[i], 48);
-        //}
-        //prepare message
+
+		// prepare message
 		BitSet M;
 		byte[] bytes = line.getBytes();
 		// leading zeros
-		String[] array = { "", "0", "00", "000","0000","00000","000000","0000000" };
-		String str = "", bits = "", result="";
+		String[] array = { "", "0", "00", "000", "0000", "00000", "000000",
+				"0000000" };
+		String str = "", bits = "", result = "";
 		int diff = 0;
-        //if (bytes.length == 0) {
-        //    return "\n";
-        //}
+
 		// convert line to bit string
 		for (int i = 0; i < line.length(); i++) {
 			str = Integer.toBinaryString(bytes[i]);
-			//System.out.println(str.length());
 			diff = (8 - str.length());
-			for(int j = 0; j < diff; j++) {
-				bits+="0";
+			for (int j = 0; j < diff; j++) {
+				bits += "0";
 			}
 			bits += str;
 		}
-		//If last M in line has less than 64bits append 0's
+		// If last M in line has less than 64bits append 0's
 		int size = bits.length(), j = (64 - (size % 64)), k = 0;
-		//for(int i = 0; i < j; i++){
-		//	bits += "2";
-		//}
-		int used = (size % 64)/8;
-		//System.out.println(used);
-        
+		int used = (size % 64) / 8;
+
 		int unused = (8 - used);
-		  /*System.out.println("used: "+used);
-		  System.out.println("unused: "+unused);
-		  System.out.println("bits: "+bits);
-		  System.out.println("bitsLength: "+bits.length());*/
-		if(unused > 0 && used != 0){
-	  		for(int i = 0; i < 8*(unused - 1); i++){
-	  			bits += "0";
-	  		}
-	  		bin = ""+unused;
-	  		bytes = bin.getBytes();
-	  		str = Integer.toBinaryString(bytes[0]);
-	  		diff = (8 - str.length());
-			for(int n = 0; n < diff; n++){
-				bits+="0";
+		if (unused > 0 && used != 0) {
+			for (int i = 0; i < 8 * (unused - 1); i++) {
+				bits += "0";
+			}
+			bin = "" + unused;
+			bytes = bin.getBytes();
+			str = Integer.toBinaryString(bytes[0]);
+			diff = (8 - str.length());
+			for (int n = 0; n < diff; n++) {
+				bits += "0";
 			}
 			bits += str;
 		}
-        //System.out.println(bits);
-        //System.out.println(bits.length());
-        //System.out.println("Bit Length: "+size);
-		size = (bits.length()/64);
-		//encrypt each message-block of line
-		for(int i = 0; i < size; i++){
+		size = (bits.length() / 64);
+		// encrypt each message-block of line
+		for (int i = 0; i < size; i++) {
 			M = new BitSet();
-			//set bits in new BitSet
-			for(int n = 0; n < 64; n++){
-				if(bits.charAt(k) == '1') {
+			// set bits in new BitSet
+			for (int n = 0; n < 64; n++) {
+				if (bits.charAt(k) == '1') {
 					M.set(n, true);
-				}else if(bits.charAt(k) == '0'){
+				} else if (bits.charAt(k) == '0') {
 					M.set(n, false);
 				}
 				k++;
 			}
-            M.xor(IV);
-            //encrypt message
-			result+= messageEncrypt(M)+"\n";
+			M.xor(IV);
+			// encrypt message
+			result += messageEncrypt(M) + "\n";
 		}
 
-		if(used == 0) {
+		if (used == 0) {
 			String bits2 = "";
 			M = new BitSet();
-			for(int n = 0; n < 56; n++){
-				bits2+="0";
+			for (int n = 0; n < 56; n++) {
+				bits2 += "0";
 			}
-			//System.out.println(bits2);
 			bin = "8";
-	  		bytes = bin.getBytes();
-	  		str = Integer.toBinaryString(bytes[0]);
-	  		//System.out.println(str);
-	  		if (str.length() > 4) {
+			bytes = bin.getBytes();
+			str = Integer.toBinaryString(bytes[0]);
+			if (str.length() > 4) {
 				diff = (8 - str.length());
 			}
 			bits2 += (array[diff] + str);
-			//System.out.println(bits2);
-			//System.out.println(bits2.length());
-			for(int n = 0; n < 64; n++){
-				if(bits2.charAt(n) == '1'){
+			for (int n = 0; n < 64; n++) {
+				if (bits2.charAt(n) == '1') {
 					M.set(n, true);
-				}else if(bits2.charAt(n) == '0') {
+				} else if (bits2.charAt(n) == '0') {
 					M.set(n, false);
 				}
 			}
-            M.xor(IV);
-			result+= messageEncrypt(M)+"\n";
+			M.xor(IV);
+			result += messageEncrypt(M) + "\n";
 		}
 		return result;
 	}
-	
+
 	/**
 	 * messageEncrypt():
+	 * 
+	 * @param M
+	 * 
+	 *            Called by DES_encrypt() to handle all data conversion from
+	 *            cleartext message to encrypted message
 	 */
-	public static String messageEncrypt(BitSet M){
+	public static String messageEncrypt(BitSet M) {
 		BitSet IP = encryptIP(M);
-		BitSet L =new BitSet(), R = new BitSet(), temp = new BitSet(), F = new BitSet();
-		for(int i = 0; i<32; i++){
+		BitSet L = new BitSet(), R = new BitSet(), temp = new BitSet(), F = new BitSet();
+		for (int i = 0; i < 32; i++) {
 			L.set(i, IP.get(i));
 		}
-		for(int i = 0; i<32;i++){
-			R.set(i, IP.get(i+32));
+		for (int i = 0; i < 32; i++) {
+			R.set(i, IP.get(i + 32));
 		}
-		//Generate R and L for 16 rounds
-		for(int i = 0; i < 16; i++){
-			for(int j = 0; j < 32; j++){
+		// Generate R and L for 16 rounds
+		for (int i = 0; i < 16; i++) {
+			for (int j = 0; j < 32; j++) {
 				temp.set(j, R.get(j));
 			}
 			F = calculateF(R, i);
 			L.xor(F);
-			for(int j = 0; j < 32; j++){
+			for (int j = 0; j < 32; j++) {
 				R.set(j, L.get(j));
 			}
-			for(int j = 0; j < 32; j++){
+			for (int j = 0; j < 32; j++) {
 				L.set(j, temp.get(j));
 			}
 		}
 
 		BitSet RL = new BitSet(), newSet = new BitSet();
-		for(int i = 0; i < 32; i++){
+		for (int i = 0; i < 32; i++) {
 			RL.set(i, R.get(i));
-			RL.set(i+32, L.get(i));
-		}	
-		//permute newSet with SBoxes.FP
-		for(int i = 0; i < 64; i++){
+			RL.set(i + 32, L.get(i));
+		}
+		// permute newSet with SBoxes.FP
+		for (int i = 0; i < 64; i++) {
 			newSet.set(i, RL.get(SBoxes.FP[i] - 1));
 		}
-        //set IV to new encrypted block
-        for(int i = 0; i< K_BITS; i++){
-            IV.set(i, newSet.get(i));
-        }
+		// set IV to new encrypted block
+		for (int i = 0; i < K_BITS; i++) {
+			IV.set(i, newSet.get(i));
+		}
 		return hexConv(newSet, 64);
 	}
-    
-    /**
-     * messageDecrypt():
-     */
-    public static String messageDecrypt(BitSet M) {
-        BitSet IP = encryptIP(M);
-        int iter = 15;
-        BitSet L =new BitSet(), R = new BitSet(), temp = new BitSet(), F = new BitSet();
-        for(int i = 0; i<32; i++){
-            L.set(i, IP.get(i));
-        }
-        for(int i = 0; i<32;i++){
-            R.set(i, IP.get(i+32));
-        }
-        
-        //Generate R and L for 16 rounds
-        for(int i = 0; i < 16; i++){
-            for(int j = 0; j < 32; j++){
-                temp.set(j, R.get(j));
-            }
-            F = calculateF(R, iter);
-            iter--;
-            L.xor(F);
-            for(int j = 0; j < 32; j++) {
-                R.set(j, L.get(j));
-            }
-            for(int j = 0; j < 32; j++) {
-                L.set(j, temp.get(j));
-            }
-        }
-        
-        BitSet RL = new BitSet(), newSet = new BitSet();
-        for(int i = 0; i < 32; i++){
-            RL.set(i, R.get(i));
-            RL.set(i+32, L.get(i));
-        }
-        
-        //permute newSet with SBoxes.FP
-        for(int i = 0; i < 64; i++){
-            newSet.set(i, RL.get(SBoxes.FP[i] - 1));
-        }
-        newSet.xor(IV);
-        // update Iv to be previous ciphertext
-        for(int i = 0; i< K_BITS; i++) {
-            IV.set(i, M.get(i));
-        }
-        String ret = BitSetToString(newSet, 64);
-        String newString = removePadding(ret);
-        if (newString.length() < 64) {
-            FULL_BLOCK = false;
-        }
-        String ret2 = binaryToASCII(newString);
-        return ret2;
-    }
-    
-    public static String removePadding(String str) {
-        StringBuffer buff = new StringBuffer();
-        // get the last value to remove number of bytes
-        for (int i = 56; i < 64; i++) {
-            buff.append(str.charAt(i));
-        }
-        //System.out.println(buff.length());
-        String bin = binaryToASCII(buff.toString());
-        Integer unused = 0;
-        String newString = "";
-        try {
-            unused = Integer.parseInt(bin);
-        } catch (Exception e) {
-            FULL_BLOCK = true;
-            // do not have an integert value (full block)!
-            // e.printStackTrace();
-        } finally {
-            if (unused.equals(8)) {
-                //System.out.println("is eight");
-            } else {
-                //System.out.println(unused);
-                for (int i =0; i < (64-(unused*8)); i++) {
-                    newString += str.charAt(i);
-                }
-//            System.out.println(newString);
-            }
-        }
-        return newString;
-    }
-    
+
 	/**
-     *
-	 * IP():
+	 * messageDecrypt():
+	 * 
+	 * @param M
+	 * 
+	 *            Called by DES_decrypt() to handle all data conversion for
+	 *            message decryption
+	 */
+	public static String messageDecrypt(BitSet M) {
+		BitSet IP = encryptIP(M);
+		int iter = 15;
+		BitSet L = new BitSet(), R = new BitSet(), temp = new BitSet(), F = new BitSet();
+		for (int i = 0; i < 32; i++) {
+			L.set(i, IP.get(i));
+		}
+		for (int i = 0; i < 32; i++) {
+			R.set(i, IP.get(i + 32));
+		}
+
+		// Generate R and L for 16 rounds
+		for (int i = 0; i < 16; i++) {
+			for (int j = 0; j < 32; j++) {
+				temp.set(j, R.get(j));
+			}
+			F = calculateF(R, iter);
+			iter--;
+			L.xor(F);
+			for (int j = 0; j < 32; j++) {
+				R.set(j, L.get(j));
+			}
+			for (int j = 0; j < 32; j++) {
+				L.set(j, temp.get(j));
+			}
+		}
+
+		BitSet RL = new BitSet(), newSet = new BitSet();
+		for (int i = 0; i < 32; i++) {
+			RL.set(i, R.get(i));
+			RL.set(i + 32, L.get(i));
+		}
+
+		// permute newSet with SBoxes.FP
+		for (int i = 0; i < 64; i++) {
+			newSet.set(i, RL.get(SBoxes.FP[i] - 1));
+		}
+		newSet.xor(IV);
+		// update Iv to be previous ciphertext
+		for (int i = 0; i < K_BITS; i++) {
+			IV.set(i, M.get(i));
+		}
+		String ret = BitSetToString(newSet, 64);
+		String newString = removePadding(ret);
+		if (newString.length() < 64) {
+			FULL_BLOCK = false;
+		}
+		String ret2 = binaryToASCII(newString);
+		return ret2;
+	}
+
+	public static String removePadding(String str) {
+		StringBuffer buff = new StringBuffer();
+		// get the last value to remove number of bytes
+		for (int i = 56; i < 64; i++) {
+			buff.append(str.charAt(i));
+		}
+		String bin = binaryToASCII(buff.toString());
+		Integer unused = 0;
+		String newString = "";
+		try {
+			unused = Integer.parseInt(bin);
+		} catch (Exception e) {
+			FULL_BLOCK = true;
+			// do not have an integert value (full block)!
+			// e.printStackTrace();
+		} finally {
+			if (unused.equals(8)) {
+			} else {
+				for (int i = 0; i < (64 - (unused * 8)); i++) {
+					newString += str.charAt(i);
+				}
+			}
+		}
+		return newString;
+	}
+
+	/**
+	 * encryptIP():
+	 * 
+	 * @param M
+	 * 
+	 *            Called by messageEncrypt() and messageDecrypt() and uses IP
+	 *            table from SBoxes for bit conversion
 	 * 
 	 */
-	public static BitSet encryptIP(BitSet M){
+	public static BitSet encryptIP(BitSet M) {
 		BitSet IPSet = new BitSet();
-		for(int i = 0; i < 64; i++){
-			IPSet.set(i, M.get(SBoxes.IP[i] - 1)); 
+		for (int i = 0; i < 64; i++) {
+			IPSet.set(i, M.get(SBoxes.IP[i] - 1));
 		}
 		return IPSet;
 	}
-	
+
 	/**
 	 * calculateFD():
 	 * 
-	 * Input 32 bit R BitSet and retrieve new 48 bit BitSet through use of E, S and P tables.
+	 * @param R
+	 *            , val
+	 * 
+	 *            Input 32 bit R BitSet and retrieve new 48 bit BitSet through
+	 *            use of E, S and P tables.
 	 */
-	public static BitSet calculateF(BitSet R, int val){
+	public static BitSet calculateF(BitSet R, int val) {
 		BitSet key = new BitSet(), E = new BitSet(), S = new BitSet(), P = new BitSet(), B, var = new BitSet();
-		for(int i = 0; i < 48; i++){
+		for (int i = 0; i < 48; i++) {
 			key.set(i, K[val].get(i));
 		}
-        //key = K[val].get(0, 48);
-		//expand R with SBoxes.E
-		for(int i = 0; i < 48; i++){
+		// expand R with SBoxes.E
+		for (int i = 0; i < 48; i++) {
 			E.set(i, R.get(SBoxes.E[i] - 1));
 		}
 		E.xor(key);
-		//calculate S with SBoxes.S
-		//call calculateS() for each box B and set S accordingly
-		
-		for(int i = 0; i < 48; i+=6){	
+		// calculate S with SBoxes.S
+		// call calculateS() for each box B and set S accordingly
+
+		for (int i = 0; i < 48; i += 6) {
 			int c = i;
-			for(int k = 0; k < 6; k++){
+			for (int k = 0; k < 6; k++) {
 				var.set(k, E.get(c));
 				c++;
 			}
-			B = calculateS(var, i/6);
-			
-			for(int j = 0; j < 4; j++){
-				S.set((j + (4*(i/6))), B.get(j));
+			B = calculateS(var, i / 6);
+
+			for (int j = 0; j < 4; j++) {
+				S.set((j + (4 * (i / 6))), B.get(j));
 			}
 		}
-		//permutate S with SBoxes.P
-		for(int i = 0; i < 32; i++){
+		// permutate S with SBoxes.P
+		for (int i = 0; i < 32; i++) {
 			P.set(i, S.get(SBoxes.P[i] - 1));
 		}
 		return P;
 	}
-	
+
 	/**
 	 * calculateS():
 	 * 
-	 * Use SBoxes.S to permute 6bit blocks into 4bit blocks 
+	 * @param B
+	 *            , boxNum
+	 * 
+	 *            Use SBoxes.S to permute 6bit blocks into 4bit blocks
 	 */
-	public static BitSet calculateS(BitSet B, int boxNum){
-		String iStr="", jStr="", dec = "", bits = "";
+	public static BitSet calculateS(BitSet B, int boxNum) {
+		String iStr = "", jStr = "", dec = "", bits = "";
 		String[] array = { "", "0", "00", "000" };
 		int i = 0, j = 0, d = 0, diff = 0;
 		boolean bool;
-		//calculate j (column)
-		for(int n = 1; n < 5; n++){
+		// calculate j (column)
+		for (int n = 1; n < 5; n++) {
 			bool = B.get(n);
-			if(bool == true){
+			if (bool == true) {
 				jStr += "1";
-			}else{
+			} else {
 				jStr += "0";
 			}
 		}
-		//calculate i (row)
-		if(B.get(0) == true){
+		// calculate i (row)
+		if (B.get(0) == true) {
 			iStr += "1";
-		}else{
+		} else {
 			iStr += "0";
 		}
-		if(B.get(5) == true){
+		if (B.get(5) == true) {
 			iStr += "1";
-		}else{
+		} else {
 			iStr += "0";
 		}
 		i = Integer.parseInt(iStr, 2);
-		j = Integer.parseInt(jStr, 2);	
-		//use SBoxes.S to permutate B. Requires i(row), j(column) and d (S[#][d])
+		j = Integer.parseInt(jStr, 2);
+		// use SBoxes.S to permutate B. Requires i(row), j(column) and d
+		// (S[#][d])
 		d = ((16 * i) + j);
-				
+
 		int sVal = SBoxes.S[boxNum][d];
 		dec = Integer.toString(sVal, 2);
-	
-		//formalize
+
+		// formalize
 		if (dec.length() < 4) {
 			diff = (4 - dec.length());
-			bits = (array[diff] + dec);	
-		}else{
+			bits = (array[diff] + dec);
+		} else {
 			bits = dec;
 		}
-		
+
 		BitSet SB = new BitSet();
-		for(int n = 0; n < 4; n++){
-			if(bits.charAt(n) == '1'){
+		for (int n = 0; n < 4; n++) {
+			if (bits.charAt(n) == '1') {
 				SB.set(n, true);
-			}else{
+			} else {
 				SB.set(n, false);
 			}
 		}
 		return SB;
 	}
-    
-    public static void genIV(){
-        SecureRandom rnd = new SecureRandom();
-        IV = new BitSet();
-        for (int i = 0; i < K_BITS; i++) {
-            IV.set(i, rnd.nextBoolean());
-        }
-    }
+
+	/**
+	 * genIV():
+	 * 
+	 * Utilizes SecureRandom to generate a unique IV for use in CBC mode
+	 */
+	public static void genIV() {
+		SecureRandom rnd = new SecureRandom();
+		IV = new BitSet();
+		for (int i = 0; i < K_BITS; i++) {
+			IV.set(i, rnd.nextBoolean());
+		}
+	}
 
 	/**
 	 * genDESkey:
@@ -637,7 +650,10 @@ public class DES_Skeleton {
 	/**
 	 * hexConv():
 	 * 
-	 * Converts BitSet to hexadecimal string
+	 * @param BitSet
+	 *            set, int size
+	 * 
+	 *            Converts BitSet to hexadecimal string
 	 */
 	public static String hexConv(BitSet set, int size) {
 		String hex = "", s = "", full = "";
@@ -657,17 +673,35 @@ public class DES_Skeleton {
 		return full;
 	}
 
-    static String binaryToASCII(String s) {
-        String s2 = "";
-        char nextChar;
-        for(int i = 0; i <= s.length()-8; i += 8) //this is a little tricky.  we want [0, 7], [9, 16], etc
-        {
-            nextChar = (char)Integer.parseInt(s.substring(i, i+8), 2);
-            s2 += nextChar;
-        }
-        return s2;
-    }
-    
+	/**
+	 * binaryToASCII():
+	 * 
+	 * @param s
+	 * 
+	 *            Converts binary string to ascii
+	 */
+	static String binaryToASCII(String s) {
+		String s2 = "";
+		char nextChar;
+		for (int i = 0; i <= s.length() - 8; i += 8) // this is a little tricky.
+														// we want [0, 7], [9,
+														// 16], etc
+		{
+			nextChar = (char) Integer.parseInt(s.substring(i, i + 8), 2);
+			s2 += nextChar;
+		}
+		return s2;
+	}
+
+	/**
+	 * printAsBinary():
+	 * 
+	 * @param bs
+	 *            , size.
+	 * 
+	 *            Takes in a BitSet and prints the binary string version to std
+	 *            out
+	 */
 	static void printAsBinary(BitSet bs, int size) {
 		if (size == 0) {
 			size = bs.size();
@@ -682,40 +716,56 @@ public class DES_Skeleton {
 		}
 		System.out.println();
 	}
-    
-    static String BitSetToString(BitSet bs, int size) {
-        StringBuffer buff = new StringBuffer();
-        if (size == 0) {
-            size = bs.size();
-        }
-        for (int i = 0; i < size; i++) {
-            if (bs.get(i)) { // if true, 1
-                buff.append("1");
-            } else { // else is 0
-                buff.append("0");
-            }
-        }
-        return buff.toString();
-    }
-	
-	public static BitSet hexToBinary(String hex, int size){
+
+	/**
+	 * BitSetToString():
+	 * 
+	 * @param bs
+	 *            , size.
+	 * 
+	 *            Takes in a BitSet and converts to a binary string
+	 */
+	static String BitSetToString(BitSet bs, int size) {
+		StringBuffer buff = new StringBuffer();
+		if (size == 0) {
+			size = bs.size();
+		}
+		for (int i = 0; i < size; i++) {
+			if (bs.get(i)) { // if true, 1
+				buff.append("1");
+			} else { // else is 0
+				buff.append("0");
+			}
+		}
+		return buff.toString();
+	}
+
+	/**
+	 * hexToBinary():
+	 * 
+	 * @param hex
+	 *            , size.
+	 * 
+	 *            Takes in a string in hex format and converts to a BitSet
+	 */
+	public static BitSet hexToBinary(String hex, int size) {
 		BitSet set = new BitSet();
 		BigInteger h = new BigInteger(hex, 16);
 		String b = h.toString(2);
-		if(b.length() < 64){
+		if (b.length() < 64) {
 			int diff = 64 - b.length();
-			for(int i = 0; i < diff; i++){
-				b = "0"+b;
+			for (int i = 0; i < diff; i++) {
+				b = "0" + b;
 			}
 		}
-		for(int i = 0; i < b.length(); i++){
-			if(b.charAt(i) == '1'){
+		for (int i = 0; i < b.length(); i++) {
+			if (b.charAt(i) == '1') {
 				set.set(i, true);
-			}else{
+			} else {
 				set.set(i, false);
 			}
 		}
-		
+
 		return set;
 	}
 
@@ -770,12 +820,12 @@ public class DES_Skeleton {
 	private static void callUseage(int exitStatus) {
 
 		String useage = "";
-		useage+="\'o\' - designates output file\n";
-		useage+="\'i\' - designates input file\n";
-		useage+="\'e\' - encrypts program using key, input file and output file\n";
-		useage+="\'d\' - decrypts program using key, input file (output of \'e\') and output file\n";
-		useage+="\'k\' - generates key\n";
-		useage+="\'h\' - lists cammand line options for this program.\n";
+		useage += "\'o\' - designates output file\n";
+		useage += "\'i\' - designates input file\n";
+		useage += "\'e\' - encrypts program using key, input file and output file\n";
+		useage += "\'d\' - decrypts program using key, input file (output of \'e\') and output file\n";
+		useage += "\'k\' - generates key\n";
+		useage += "\'h\' - lists cammand line options for this program.\n";
 
 		System.out.println(useage);
 		System.exit(exitStatus);
