@@ -344,7 +344,7 @@ public class DES_Skeleton {
         for (int i = 56; i < 64; i++) {
             buff.append(str.charAt(i));
         }
-        System.out.println(buff.length());
+        //System.out.println(buff.length());
         String bin = binaryToASCII(buff.toString());
         Integer unused = 0;
         String newString = "";
@@ -356,9 +356,9 @@ public class DES_Skeleton {
             // e.printStackTrace();
         } finally {
             if (unused.equals(8)) {
-                System.out.println("is eight");
+                //System.out.println("is eight");
             } else {
-                System.out.println(unused);
+                //System.out.println(unused);
                 for (int i =0; i < (64-(unused*8)); i++) {
                     newString += str.charAt(i);
                 }
@@ -770,8 +770,14 @@ public class DES_Skeleton {
 	private static void callUseage(int exitStatus) {
 
 		String useage = "";
+		useage+="\'o\' - designates output file\n";
+		useage+="\'i\' - designates input file\n";
+		useage+="\'e\' - encrypts program using key, input file and output file\n";
+		useage+="\'d\' - decrypts program using key, input file (output of \'e\') and output file\n";
+		useage+="\'k\' - generates key\n";
+		useage+="\'h\' - lists cammand line options for this program.\n";
 
-		System.err.println(useage);
+		System.out.println(useage);
 		System.exit(exitStatus);
 
 	}
