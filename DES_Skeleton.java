@@ -330,6 +330,7 @@ public class DES_Skeleton {
 		for (int i = 0; i < K_BITS; i++) {
 			IV.set(i, M.get(i));
 		}
+        
 		String ret = BitSetToString(newSet, 64);
 		String newString = removePadding(ret);
 		if (newString.length() < 64) {
@@ -338,7 +339,16 @@ public class DES_Skeleton {
 		String ret2 = binaryToASCII(newString);
 		return ret2;
 	}
-
+    
+    /**
+     * removePadding():
+     *
+     * @param str
+     *
+     *            Called by messageDecrypt(). removes the extra padding
+     *            from current message after decrypting.
+     * 
+     */
 	public static String removePadding(String str) {
 		StringBuffer buff = new StringBuffer();
 		// get the last value to remove number of bytes
@@ -385,8 +395,7 @@ public class DES_Skeleton {
 	/**
 	 * calculateFD():
 	 * 
-	 * @param R
-	 *            , val
+	 * @param R, val
 	 * 
 	 *            Input 32 bit R BitSet and retrieve new 48 bit BitSet through
 	 *            use of E, S and P tables.
@@ -527,7 +536,14 @@ public class DES_Skeleton {
 			}
 		}
 	}
-
+    
+    
+    /**
+     * permute56bits:
+     *
+     *  permutes from PC-1 the 56-bits from the key K.
+     *
+     */
 	static void permute56bits() {
 		Kp_BITSET = new BitSet(Kp_BITS);
 		for (int i = 0; i < Kp_BITS; i++) {
@@ -539,7 +555,13 @@ public class DES_Skeleton {
 			System.out.println();
 		}
 	}
-
+    
+    /**
+     * genKeys:
+     *
+     *  Generates the 16 subkeys.
+     *
+     */
 	static void genKeys() {
 		C = new BitSet[17];
 		D = new BitSet[17];
@@ -575,7 +597,13 @@ public class DES_Skeleton {
 		}
 		KKeys();
 	}
-
+    
+    /**
+     * KKeys:
+     *
+     *  helper method for genKeys that fetches the indexes from the C and D
+     *  arrays and permutes them from PC-2 block.
+     */
 	public static void KKeys() {
 		BitSet gen = new BitSet();
 		BitSet[] genArr = new BitSet[17];
@@ -634,6 +662,13 @@ public class DES_Skeleton {
 		return true;
 	}
 
+    /**
+     * shiftLeft():
+     *
+     * @param left, numShift
+     *      helper method to shift the bitset left by the number of shifts indicated
+     *      by the second parameter
+     */
 	public static BitSet shiftLeft(BitSet left, int numShift) {
 		BitSet c = new BitSet(28);
 		c = left;
